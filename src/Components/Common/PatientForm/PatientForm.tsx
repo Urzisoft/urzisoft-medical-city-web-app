@@ -23,7 +23,7 @@ const PatientForm: React.FC<DynamicFormProps> = ({ formData }) => {
         });
 
         if (file) {
-            formDataWithImage.append('image', file);
+            formDataWithImage.append('image_url', file);
         }
         console.log('send data');
         //@ts-ignore
