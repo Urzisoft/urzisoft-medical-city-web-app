@@ -1,34 +1,45 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { BodyWrapper, FormInput, FormSelect, FormWrapper, PWrapper, SubmitButton } from './PatientForm.style';
+import usePostCustomFetch from '../../../Hooks/usePostCustomFetch';
+import { MedicalReportType } from '../../../Utils/Types';
 
 type DynamicFormProps = {
     formData: any;
 };
 
 const PatientForm: React.FC<DynamicFormProps> = ({ formData }) => {
+    const [imageId, setImageId] = useState<MedicalReportType>();
     const { register, handleSubmit } = useForm();
-
-    const [file, setFile] = useState<File | null>(null);
-
-    const handleFileChange = ({ target }: React.ChangeEvent<HTMLInputElement>) => {
-        const selectedImage = target.files?.[0] || null;
-        setFile(selectedImage);
-    };
+    const { fetcher: sendPatientData } = usePostCustomFetch('http://localhost:8000/medical-city/medical-patients/');
+    const { fetcher: sendImageData, response } = usePostCustomFetch<MedicalReportType, FormData>(
+        'http://localhost:8000/medical-city/medical-report/'
+    );
 
     const onSubmit = async (formData: any) => {
-        const formDataWithImage = new FormData();
-        Object.entries(formData).forEach(([key, value]) => {
-            formDataWithImage.append(key, value as any);
-        });
+        if (imageId) {
+            formData.medical_status = imageId.id;
+        }
+        await sendPatientData(formData);
+        console.log(formData);
+    };
+
+    const handleImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
 
         if (file) {
-            formDataWithImage.append('image_url', file);
+            const formData = new FormData();
+            formData.append('image_url', file);
+
+            await sendImageData(formData, '', true);
         }
-        console.log('send data');
-        //@ts-ignore
-        console.log(...formDataWithImage);
     };
+    useEffect(() => {
+        if (response && response.id) {
+            setImageId(response);
+            console.log(response);
+        }
+    }, [imageId, response]);
 
     return (
         <BodyWrapper>
@@ -60,7 +71,7 @@ const PatientForm: React.FC<DynamicFormProps> = ({ formData }) => {
                             return (
                                 <div key={field.name}>
                                     <label htmlFor={field.name}>{field.label}</label>
-                                    <input type="file" id={field.name} accept="image/*" onChange={handleFileChange} />
+                                    <input type="file" id={field.name} accept="image/*" onChange={handleImageChange} />
                                 </div>
                             );
                         default:

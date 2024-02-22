@@ -6,14 +6,13 @@ const useGetCustomFetch = <Data, Param>(url: RequestInfo): FetchResponseGET<Data
     const [apiData, setApiData] = useState<Data | null>(null);
     const [serverError, setServerError] = useState(null);
 
-    const fetcher = async (token?: Param) => {
+    const fetcher = async () => {
         setIsLoading(true);
         try {
             const request = await fetch(url, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
-                    ...(token && { Authorization: `Bearer ${token}` }),
                 },
             });
             const response = await request.json();
